@@ -21,9 +21,9 @@
  * https://github.com/google/googleapis/blob/master/google/bigtable/v2/bigtable.proto
  * and updates to that file get reflected here through a refresh process.
  *
- * EXPERIMENTAL: this client library class has not yet been declared GA (1.0). This means that
- * even though we intent the surface to be stable, we may make backwards incompatible changes
- * if necessary.
+ * EXPERIMENTAL: this client library class has not yet been declared beta. This class may change
+ * more frequently than those which have been declared beta or 1.0, including changes which break
+ * backwards compatibility.
  *
  * @experimental
  */
@@ -31,12 +31,18 @@
 namespace Google\Cloud\Bigtable\V2;
 
 use Google\Cloud\Bigtable\V2\Gapic\BigtableGapicClient;
+use Google\Cloud\Bigtable\V2\ChunkFormatter;
 
 /**
  * {@inheritdoc}
  */
+// class BigtableClient extends BigtableGapicClient
 class BigtableClient extends BigtableGapicClient
 {
-    // This class is intentionally empty, and is intended to hold manual
-    // additions to the generated {@see BigtableClientImpl} class.
+    // This class is intentionally empty, and is intended to hold manual additions to the generated {@see BigtableClientImpl} class.
+    public function readRows($tableName, $optionalArgs = []){
+        $serverStream = parent::readRows($tableName, $optionalArgs);
+        $chunkFormatter = new ChunkFormatter($serverStream, $optionalArgs);
+        return $chunkFormatter;
+    }
 }
