@@ -1,19 +1,4 @@
 <?php
-/*!
- * Copyright 2016 Google Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 namespace Google\Cloud\Bigtable\V2;
 use Google\Cloud\Bigtable\V2\Cell;
@@ -39,7 +24,6 @@ class ChunkFormatter {
 	 * ROW_IN_PROGRESS: state after first valid chunk without commitRow or resetRow
 	 * CELL_IN_PROGRESS: state when valueSize > 0(partial cell)
 	 */
-
 	function __construct($stream, $options) {
 		$this->serverStream = $stream;
 		$this->options      = $options;
@@ -67,7 +51,6 @@ class ChunkFormatter {
 	 * @public
 	 * @throws Error if it detects invalid state
 	 */
-
 	public function readAll() {
 		foreach ($this->serverStream->readAll() as $readRowResponse) {
 			foreach ($readRowResponse->getChunks() as $chunk) {

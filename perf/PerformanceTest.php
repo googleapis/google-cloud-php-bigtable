@@ -3,12 +3,14 @@ require '../vendor/autoload.php';
 
 use Google\Cloud\Bigtable\src\BigtableTable;
 
-class PerformanceTest {
+class PerformanceTest
+{
 	private $BigtableTable;
 	private $randomValues;
 	private $randomTotal = 1000;
 
-	function __construct() {
+	function __construct()
+	{
 		$this->BigtableTable = new BigtableTable();
 		$length              = 100;
 		for ($i = 1; $i <= $this->randomTotal; $i++) {
@@ -31,7 +33,8 @@ class PerformanceTest {
 	 *
 	 * @return array
 	 */
-	public function loadRecord($table, $rowKey_pref, $columnFamily, $optionalArgs = []) {
+	public function loadRecord($table, $rowKey_pref, $columnFamily, $optionalArgs = [])
+	{
 		$total_row  = (isset($optionalArgs['total_row']))?$optionalArgs['total_row']:10000;
 		$batch_size = (isset($optionalArgs['batch_size']))?$optionalArgs['batch_size']:1000;
 
@@ -123,7 +126,8 @@ class PerformanceTest {
 	 *
 	 * @return array
 	 */
-	public function randomReadWrite($table, $rowKey_pref, $cf, $option) {
+	public function randomReadWrite($table, $rowKey_pref, $cf, $option)
+	{
 		$total_row      = (isset($option['total_row']))?$option['total_row']:10000000;
 		$readRowsTotal  = ['success' => [], 'failure' => []];
 		$writeRowsTotal = ['success' => [], 'failure' => []];
