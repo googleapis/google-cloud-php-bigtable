@@ -2,7 +2,7 @@
 // GENERATED CODE -- DO NOT EDIT!
 
 // Original file comments:
-// Copyright 2021 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -363,6 +363,22 @@ class BigtableInstanceAdminGrpcClient extends \Grpc\BaseStub {
         return $this->_simpleRequest('/google.bigtable.admin.v2.BigtableInstanceAdmin/TestIamPermissions',
         $argument,
         ['\Google\Cloud\Iam\V1\TestIamPermissionsResponse', 'decode'],
+        $metadata, $options);
+    }
+
+    /**
+     * Lists hot tablets in a cluster, within the time range provided. Hot
+     * tablets are ordered based on CPU usage.
+     * @param \Google\Cloud\Bigtable\Admin\V2\ListHotTabletsRequest $argument input argument
+     * @param array $metadata metadata
+     * @param array $options call options
+     * @return \Grpc\UnaryCall
+     */
+    public function ListHotTablets(\Google\Cloud\Bigtable\Admin\V2\ListHotTabletsRequest $argument,
+      $metadata = [], $options = []) {
+        return $this->_simpleRequest('/google.bigtable.admin.v2.BigtableInstanceAdmin/ListHotTablets',
+        $argument,
+        ['\Google\Cloud\Bigtable\Admin\V2\ListHotTabletsResponse', 'decode'],
         $metadata, $options);
     }
 

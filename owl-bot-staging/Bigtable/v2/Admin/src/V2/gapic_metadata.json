@@ -70,6 +70,11 @@
                                 "listClusters"
                             ]
                         },
+                        "ListHotTablets": {
+                            "methods": [
+                                "listHotTablets"
+                            ]
+                        },
                         "ListInstances": {
                             "methods": [
                                 "listInstances"
