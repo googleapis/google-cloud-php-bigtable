@@ -164,7 +164,7 @@ class BigtableClient
     {
         if ($this->pingAndWarm) {
             $this->gapicClient->pingAndWarm(
-                $this->gapicClient->instanceName($this->projectId, $instanceId)
+                GapicClient::instanceName($this->projectId, $instanceId)
             );
         }
 
