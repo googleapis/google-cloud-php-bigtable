@@ -82,6 +82,7 @@ class BigtableClientTest extends TestCase
         $bigtable = new BigtableClient([
             'projectId' => 'my-project',
             'credentials' => new InsecureCredentialsWrapper(),
+            'gapicClient' => $gapicClient->reveal(),
             'pingAndWarm' => true,
         ]);
         (fn() => $this->gapicClient = $gapicClient->reveal())->call($bigtable);
@@ -91,17 +92,5 @@ class BigtableClientTest extends TestCase
         $bigtable->table('my-instance', 'my-table'); // not called
         $bigtable->table('my-instance', 'my-table-2'); // still not called
         $bigtable->table('my-instance-2', 'my-table'); // called
-
-        // creating a new client with the same projectId still will not call pingandwarm more than
-        // once per instance
-        $bigtable = new BigtableClient([
-            'projectId' => 'my-project',
-            'credentials' => new InsecureCredentialsWrapper(),
-            'pingAndWarm' => true,
-        ]);
-
-        $bigtable->table('my-instance', 'my-table'); // still not called
-        $bigtable->table('my-instance', 'my-table-2'); // still not called
-        $bigtable->table('my-instance-2', 'my-table'); // still not called
     }
 }

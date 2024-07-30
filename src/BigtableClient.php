@@ -63,12 +63,12 @@ class BigtableClient
     private $pingAndWarm;
 
     /**
-     * An in-memory static array to ensure pingAndWarm is only called once per instance.
+     * An in-memory array to ensure pingAndWarm is only called once per instance.
      *
      * @experimental
      * @var array
      */
-    private static $pingAndWarmCalled = [];
+    private $pingAndWarmCalled = [];
 
     /**
      * Create a Bigtable client.
@@ -173,15 +173,14 @@ class BigtableClient
      */
     public function table($instanceId, $tableId, array $options = [])
     {
-        if ($this->pingAndWarm) {
-            $instanceName = GapicClient::instanceName($this->projectId, $instanceId);
-            if (!(self::$pingAndWarmCalled[$instanceName] ?? false)) {
-                // The default deadline is configured by the "clientConfig" option, which uses
-                // `src/V2/resources/bigtable_client_config.json`.
-                // This default deadline should be high enough to absorb cold connection latencies.
-                $this->gapicClient->pingAndWarm($instanceName);
-                self::$pingAndWarmCalled[$instanceName] = true;
-            }
+        if ($this->pingAndWarm && !($this->pingAndWarmCalled[$instanceId] ?? false)) {
+            // The default deadline is configured by the "clientConfig" option, which uses
+            // `src/V2/resources/bigtable_client_config.json`.
+            // This default deadline should be high enough to absorb cold connection latencies.
+            $this->gapicClient->pingAndWarm(
+                GapicClient::instanceName($this->projectId, $instanceId)
+            );
+            $this->pingAndWarmCalled[$instanceId] = true;
         }
 
         return new Table(
