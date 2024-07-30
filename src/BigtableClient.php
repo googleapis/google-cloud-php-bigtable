@@ -54,6 +54,12 @@ class BigtableClient
     private $projectId;
 
     /**
+     * @experimental
+     * @var bool
+     */
+    private $pingAndWarm;
+
+    /**
      * Create a Bigtable client.
      *
      * @param array $config [optional] {
@@ -104,6 +110,10 @@ class BigtableClient
      *           supported options.
      *     @type string $quotaProject Specifies a user project to bill for
      *           access charges associated with the request.
+     *     @type bool $pingAndWarm EXPERIMENTAL When true, calls the
+     *           {@see GapicClient::pingAndWarm()} RPC to establish a persistent
+     *           gRPC channel before making an RPC call.
+     *
      * }
      * @throws ValidationException
      */
@@ -126,6 +136,7 @@ class BigtableClient
         $this->projectId = $this->pluck('projectId', $config, false)
             ?: $this->detectProjectId();
         $this->gapicClient = new GapicClient($config);
+        $this->pingAndWarm = $config['pingAndWarm'] ?? false;
     }
 
     /**
@@ -151,6 +162,12 @@ class BigtableClient
      */
     public function table($instanceId, $tableId, array $options = [])
     {
+        if ($this->pingAndWarm) {
+            $this->gapicClient->pingAndWarm(
+                $this->gapicClient->instanceName($this->projectId, $instanceId)
+            );
+        }
+
         return new Table(
             $this->gapicClient,
             GapicClient::tableName($this->projectId, $instanceId, $tableId),
