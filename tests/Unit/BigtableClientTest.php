@@ -72,7 +72,10 @@ class BigtableClientTest extends TestCase
             'pingAndWarm' => true, // this would throw an auth error if it was called
         ]);
 
-        $gapicClient->pingAndWarm(Argument::any())
+        $gapicClient = $this->prophesize(BigtableGapicClient::class);
+        $gapicClient->pingAndWarm('projects/my-project/instances/my-instance')
+            ->shouldBeCalledOnce();
+        $gapicClient->pingAndWarm('projects/my-project/instances/my-instance-2')
             ->shouldBeCalledOnce();
 
         // calling "::table" with the option should call pingandwarm
@@ -84,5 +87,10 @@ class BigtableClientTest extends TestCase
         ]);
         (fn() => $this->gapicClient = $gapicClient->reveal())->call($bigtable);
         $bigtable->table('my-instance', 'my-table');
+
+        // "PingAndWarm" will only be called once per instance
+        $bigtable->table('my-instance', 'my-table'); // not called
+        $bigtable->table('my-instance', 'my-table-2'); // still not called
+        $bigtable->table('my-instance-2', 'my-table'); // called
     }
 }

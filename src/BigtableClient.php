@@ -60,6 +60,11 @@ class BigtableClient
     private $pingAndWarm;
 
     /**
+     * @var array
+     */
+    private $pingAndWarmCalled = [];
+
+    /**
      * Create a Bigtable client.
      *
      * @param array $config [optional] {
@@ -162,10 +167,11 @@ class BigtableClient
      */
     public function table($instanceId, $tableId, array $options = [])
     {
-        if ($this->pingAndWarm) {
+        if ($this->pingAndWarm && !($this->pingAndWarmCalled[$instanceId] ?? false)) {
             $this->gapicClient->pingAndWarm(
                 GapicClient::instanceName($this->projectId, $instanceId)
             );
+            $this->pingAndWarmCalled[$instanceId] = true;
         }
 
         return new Table(
