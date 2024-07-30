@@ -54,12 +54,18 @@ class BigtableClient
     private $projectId;
 
     /**
+     * Invoke {@see GapicClient::pingAndWarm()} when {@see self::table()} is called
+     * in order to establish a persistent gRPC channel before making an RPC call.
+     *
      * @experimental
      * @var bool
      */
     private $pingAndWarm;
 
     /**
+     * An in-memory static array to ensure pingAndWarm is only called once per instance.
+     *
+     * @experimental
      * @var array
      */
     private static $pingAndWarmCalled = [];
