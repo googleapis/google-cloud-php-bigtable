@@ -168,6 +168,9 @@ class BigtableClient
     public function table($instanceId, $tableId, array $options = [])
     {
         if ($this->pingAndWarm && !($this->pingAndWarmCalled[$instanceId] ?? false)) {
+            // The default deadline is configured by the "clientConfig" option, which uses
+            // `src/V2/resources/bigtable_client_config.json`.
+            // This default deadline should be high enough to absorb cold connection latencies.
             $this->gapicClient->pingAndWarm(
                 GapicClient::instanceName($this->projectId, $instanceId)
             );
