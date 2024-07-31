@@ -54,6 +54,23 @@ class BigtableClient
     private $projectId;
 
     /**
+     * Invoke {@see GapicClient::pingAndWarm()} when {@see self::table()} is called
+     * in order to establish a persistent gRPC channel before making an RPC call.
+     *
+     * @experimental
+     * @var bool
+     */
+    private $pingAndWarm;
+
+    /**
+     * An in-memory array to ensure pingAndWarm is only called once per instance.
+     *
+     * @experimental
+     * @var array
+     */
+    private $pingAndWarmCalled = [];
+
+    /**
      * Create a Bigtable client.
      *
      * @param array $config [optional] {
@@ -104,6 +121,10 @@ class BigtableClient
      *           supported options.
      *     @type string $quotaProject Specifies a user project to bill for
      *           access charges associated with the request.
+     *     @type bool $pingAndWarm EXPERIMENTAL When true, calls the
+     *           {@see GapicClient::pingAndWarm()} RPC to establish a persistent
+     *           gRPC channel before making an RPC call.
+     *
      * }
      * @throws ValidationException
      */
@@ -126,6 +147,7 @@ class BigtableClient
         $this->projectId = $this->pluck('projectId', $config, false)
             ?: $this->detectProjectId();
         $this->gapicClient = new GapicClient($config);
+        $this->pingAndWarm = $config['pingAndWarm'] ?? false;
     }
 
     /**
@@ -151,6 +173,16 @@ class BigtableClient
      */
     public function table($instanceId, $tableId, array $options = [])
     {
+        if ($this->pingAndWarm && !($this->pingAndWarmCalled[$instanceId] ?? false)) {
+            // The default deadline is configured by the "clientConfig" option, which uses
+            // `src/V2/resources/bigtable_client_config.json`.
+            // This default deadline should be high enough to absorb cold connection latencies.
+            $this->gapicClient->pingAndWarm(
+                GapicClient::instanceName($this->projectId, $instanceId)
+            );
+            $this->pingAndWarmCalled[$instanceId] = true;
+        }
+
         return new Table(
             $this->gapicClient,
             GapicClient::tableName($this->projectId, $instanceId, $tableId),
