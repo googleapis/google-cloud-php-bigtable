@@ -178,7 +178,8 @@ class BigtableClient
             // `src/V2/resources/bigtable_client_config.json`.
             // This default deadline should be high enough to absorb cold connection latencies.
             $this->gapicClient->pingAndWarm(
-                GapicClient::instanceName($this->projectId, $instanceId)
+                GapicClient::instanceName($this->projectId, $instanceId),
+                $options
             );
             $this->pingAndWarmCalled[$instanceId] = true;
         }
