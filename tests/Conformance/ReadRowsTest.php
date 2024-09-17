@@ -49,7 +49,8 @@ class ReadRowsTest extends TestCase
             $this->arrayAsGenerator($readRowsResponses)
         );
         $chunkFormatter = new ChunkFormatter(
-            $this->serverStream->reveal()
+            fn () => $this->serverStream->reveal(),
+            'table_name'
         );
         $rows = [];
         $errorCount = 0;
