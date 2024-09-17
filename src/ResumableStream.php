@@ -65,6 +65,11 @@ class ResumableStream implements \IteratorAggregate
     private $logger;
 
     /**
+     * @var callable
+     */
+    private $delayFunction;
+
+    /**
      * Constructs a resumable stream.
      *
      * @param callable $apiFunction Function to execute to get server stream. Function signature
@@ -86,6 +91,22 @@ class ResumableStream implements \IteratorAggregate
         $this->argumentFunction = $argumentFunction;
         $this->retryFunction = $retryFunction;
         $this->logger = $logger;
+
+        $this->delayFunction = function (int $attempt) {
+            // Values here are taken from the Java Bigtable client, and are
+            // different than those set by default in the readRows configuration
+            // @see https://github.com/googleapis/java-bigtable/blob/c618969216c90c42dee6ee48db81e90af4fb102b/google-cloud-bigtable/src/main/java/com/google/cloud/bigtable/data/v2/stub/EnhancedBigtableStubSettings.java#L162-L164
+            $initialDelayMillis = 10;
+            $initialDelayMultiplier = 2;
+            $maxDelayMillis = 60000;
+
+            $delayMultiplier = $initialDelayMultiplier ** $attempt;
+            $delayMs = min($initialDelayMillis * $delayMultiplier, $maxDelayMillis);
+            $actualDelayMs = mt_rand(0, $delayMs); // add jitter
+            $delay = 1000 * $actualDelayMs; // convert ms to µs
+
+            usleep((int) $delay);
+        };
     }
 
     /**
@@ -96,34 +117,41 @@ class ResumableStream implements \IteratorAggregate
      */
     public function readAll()
     {
-        $tries = 0;
-        $argumentFunction = $this->argumentFunction;
-        $retryFunction = $this->retryFunction;
+        // Reset $currentAttempts on successful row read, but keep total attempts for the header.
+        $currentAttempt = $totalAttempt = 0;
         do {
             $ex = null;
-            $args = $argumentFunction();
-            if (!isset($args[1]['requestCompleted']) || $args[1]['requestCompleted'] !== true) {
-                if ($tries > 0) {
-                    // Send in "bigtable-attempt" header on retry
-                    $optionalArgs = array_pop($args);
+            $args = ($this->argumentFunction)();
+
+            $completed = ($args[1]['requestCompleted'] ?? false) === true;
+            if ($completed !== true) {
+                $optionalArgs = array_pop($args);
+                $optionalArgs['retrySettings'] = ['retriesEnabled' => false]; // disable retries in GAPIC layer
+                // Send in "bigtable-attempt" header on retry request
+                if ($totalAttempt > 0) {
                     $headers = $optionalArgs['headers'] ?? [];
-                    $headers['bigtable-attempt'] = [(string) $tries];
+                    $headers['bigtable-attempt'] = [(string) $totalAttempt];
                     $optionalArgs['headers'] = $headers;
-                    $args[] = $optionalArgs;
+                    ($this->delayFunction)($currentAttempt);
                 }
-                $stream = $this->createExponentialBackoff()->execute($this->apiFunction, $args);
+                $args[] = $optionalArgs;
+
+                $stream = call_user_func_array($this->apiFunction, $args);
+
                 try {
                     foreach ($stream->readAll() as $item) {
                         yield $item;
+                        $currentAttempt = 0; // reset delay and attempt on successful read.
                     }
                 } catch (\Exception $ex) {
                     if ($this->logger) {
                         $this->logger->error($ex->getMessage());
                     }
                 }
+                $totalAttempt++;
+                $currentAttempt++;
             }
-            $tries++;
-        } while ((!$this->retryFunction || $retryFunction($ex)) && $tries <= $this->retries);
+        } while ((!$this->retryFunction || ($this->retryFunction)($ex)) && $currentAttempt <= $this->retries);
         if ($ex !== null) {
             throw $ex;
         }

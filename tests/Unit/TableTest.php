@@ -73,7 +73,8 @@ class TableTest extends TestCase
         $this->serverStream = $this->prophesize(ServerStream::class);
         $this->options = [
             'appProfileId' => self::APP_PROFILE,
-            'headers' => [self::HEADER => self::HEADER_VALUE]
+            'headers' => [self::HEADER => self::HEADER_VALUE],
+            'retrySettings' => ['retriesEnabled' => false],
         ];
         $this->table = new Table(
             $this->bigtableClient->reveal(),
