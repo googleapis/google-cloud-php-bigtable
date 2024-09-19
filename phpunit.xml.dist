@@ -13,5 +13,8 @@
     <testsuite name="Unit Test Suite">
       <directory>tests/Unit</directory>
     </testsuite>
+    <testsuite>
+      <directory>tests/Conformance</directory>
+    </testsuite>
   </testsuites>
 </phpunit>
